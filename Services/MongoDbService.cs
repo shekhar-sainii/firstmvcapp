@@ -17,6 +17,11 @@ public class MongoDbService
         _usersCollection = _database.GetCollection<User>("users");
     }
 
+    public IMongoCollection<T> GetCollection<T>(string name)
+    {
+        return _database.GetCollection<T>(name);
+    }
+
     // Get all users
     public async Task<List<User>> GetAllUsersAsync()
     {

@@ -13,14 +13,14 @@ namespace FirstMvcApp.Controllers;
 [Produces("application/json")]
 public class AccountApiController : ControllerBase
 {
-    private readonly MongoDbService _mongoDbService;
+    private readonly IUserService _userService;
     private readonly JwtService _jwtService;
     private readonly IEmailService _emailService;
     private readonly ILogger<AccountApiController> _logger;
 
-    public AccountApiController(MongoDbService mongoDbService, JwtService jwtService, IEmailService emailService, ILogger<AccountApiController> logger)
+    public AccountApiController(IUserService userService, JwtService jwtService, IEmailService emailService, ILogger<AccountApiController> logger)
     {
-        _mongoDbService = mongoDbService;
+        _userService = userService;
         _jwtService = jwtService;
         _emailService = emailService;
         _logger = logger;
@@ -51,10 +51,10 @@ public class AccountApiController : ControllerBase
 
         try
         {
-            // Find user by email
-            var user = await _mongoDbService.GetUserByEmailAsync(model.Email);
+            // Authenticate user
+            var user = await _userService.AuthenticateAsync(model.Email, model.Password);
 
-            if (user != null && PasswordHelper.VerifyPassword(model.Password, user.Password))
+            if (user != null)
             {
                 // Generate JWT token
                 var token = _jwtService.GenerateToken(user);
@@ -113,7 +113,7 @@ public class AccountApiController : ControllerBase
         try
         {
             // Check if user already exists
-            var existingUser = await _mongoDbService.GetUserByEmailAsync(model.Email);
+            var existingUser = await _userService.GetUserByEmailAsync(model.Email);
             if (existingUser != null)
             {
                 return Conflict(ApiResponse<AuthDataResponse>.ErrorResponse("This email is already registered", 409));
@@ -136,13 +136,13 @@ public class AccountApiController : ControllerBase
                 IsActive = true
             };
 
-            // Save user to MongoDB
-            bool created = await _mongoDbService.CreateUserAsync(user);
+            // Save user to MongoDB via Service
+            bool created = await _userService.RegisterUserAsync(user);
 
             if (created)
             {
                 // Get the created user
-                var newUser = await _mongoDbService.GetUserByEmailAsync(model.Email);
+                var newUser = await _userService.GetUserByEmailAsync(model.Email);
                 if (newUser != null)
                 {
                     // Generate JWT token
@@ -214,7 +214,7 @@ public class AccountApiController : ControllerBase
                 return BadRequest(ApiResponse<UserDto>.ErrorResponse("Email is required", 400));
             }
 
-            var user = await _mongoDbService.GetUserByEmailAsync(email);
+            var user = await _userService.GetUserByEmailAsync(email);
             if (user == null)
             {
                 return NotFound(ApiResponse<UserDto>.NotFoundResponse("User not found"));
@@ -260,7 +260,7 @@ public class AccountApiController : ControllerBase
             }
 
             // Get existing user
-            var user = await _mongoDbService.GetUserByEmailAsync(request.Email);
+            var user = await _userService.GetUserByEmailAsync(request.Email);
             if (user == null)
             {
                 return NotFound(ApiResponse<UserDto>.NotFoundResponse("User not found"));
@@ -275,7 +275,7 @@ public class AccountApiController : ControllerBase
             user.UpdatedAt = DateTime.UtcNow;
 
             // Save updated user
-            bool updated = await _mongoDbService.UpdateUserAsync(user.Id, user);
+            bool updated = await _userService.UpdateUserAsync(user.Id, user);
             if (!updated)
             {
                 return BadRequest(ApiResponse<UserDto>.ErrorResponse("Failed to update profile", 400));

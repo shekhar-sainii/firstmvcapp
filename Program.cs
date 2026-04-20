@@ -1,4 +1,5 @@
 using FirstMvcApp.Services;
+using FirstMvcApp.Repositories;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,6 +21,12 @@ builder.Services.AddScoped<JwtService>();
 
 // Add Email Service
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Add Repository Layer
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+// Add Service Layer
+builder.Services.AddScoped<IUserService, UserService>();
 
 // Add Swagger
 builder.Services.AddSwaggerGen(c =>
@@ -104,6 +111,7 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseHttpsRedirection();
+app.UseStaticFiles();
 app.UseRouting();
 app.UseSession();
 

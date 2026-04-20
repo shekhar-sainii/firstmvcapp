@@ -12,12 +12,12 @@ namespace FirstMvcApp.Controllers;
 [Produces("application/json")]
 public class UsersApiController : ControllerBase
 {
-    private readonly MongoDbService _mongoDbService;
+    private readonly IUserService _userService;
     private readonly ILogger<UsersApiController> _logger;
 
-    public UsersApiController(MongoDbService mongoDbService, ILogger<UsersApiController> logger)
+    public UsersApiController(IUserService userService, ILogger<UsersApiController> logger)
     {
-        _mongoDbService = mongoDbService;
+        _userService = userService;
         _logger = logger;
     }
 
@@ -32,7 +32,7 @@ public class UsersApiController : ControllerBase
     {
         try
         {
-            var users = await _mongoDbService.GetAllUsersAsync();
+            var users = await _userService.GetAllUsersAsync();
             return Ok(ApiResponse<List<User>>.SuccessResponse(users, "Users retrieved successfully"));
         }
         catch (Exception ex)
@@ -56,7 +56,7 @@ public class UsersApiController : ControllerBase
     {
         try
         {
-            var user = await _mongoDbService.GetUserByIdAsync(id);
+            var user = await _userService.GetUserByIdAsync(id);
             if (user == null)
                 return NotFound(ApiResponse<User>.NotFoundResponse("User not found"));
 
@@ -83,7 +83,7 @@ public class UsersApiController : ControllerBase
     {
         try
         {
-            var user = await _mongoDbService.GetUserByEmailAsync(email);
+            var user = await _userService.GetUserByEmailAsync(email);
             if (user == null)
                 return NotFound(ApiResponse<User>.NotFoundResponse("User not found"));
 
@@ -117,7 +117,7 @@ public class UsersApiController : ControllerBase
                 return BadRequest(ApiResponse.ErrorResponse("User ID is required", 400));
 
             user.Id = id;
-            var updated = await _mongoDbService.UpdateUserAsync(id, user);
+            var updated = await _userService.UpdateUserAsync(id, user);
             
             if (!updated)
                 return NotFound(ApiResponse.NotFoundResponse("User not found"));
@@ -148,7 +148,7 @@ public class UsersApiController : ControllerBase
             if (string.IsNullOrEmpty(id))
                 return BadRequest(ApiResponse.ErrorResponse("User ID is required", 400));
 
-            var deleted = await _mongoDbService.DeleteUserAsync(id);
+            var deleted = await _userService.DeleteUserAsync(id);
             
             if (!deleted)
                 return NotFound(ApiResponse.NotFoundResponse("User not found"));

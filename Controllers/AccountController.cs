@@ -7,13 +7,13 @@ namespace FirstMvcApp.Controllers;
 
 public class AccountController : Controller
 {
-    private readonly MongoDbService _mongoDbService;
+    private readonly IUserService _userService;
     private readonly JwtService _jwtService;
     private readonly ILogger<AccountController> _logger;
 
-    public AccountController(MongoDbService mongoDbService, JwtService jwtService, ILogger<AccountController> logger)
+    public AccountController(IUserService userService, JwtService jwtService, ILogger<AccountController> logger)
     {
-        _mongoDbService = mongoDbService;
+        _userService = userService;
         _jwtService = jwtService;
         _logger = logger;
     }
@@ -33,10 +33,10 @@ public class AccountController : Controller
         {
             try
             {
-                // Find user by email
-                var user = await _mongoDbService.GetUserByEmailAsync(model.Email);
+                // Authenticate user
+                var user = await _userService.AuthenticateAsync(model.Email, model.Password);
 
-                if (user != null && PasswordHelper.VerifyPassword(model.Password, user.Password))
+                if (user != null)
                 {
                     // Generate JWT token
                     var token = _jwtService.GenerateToken(user);
@@ -96,7 +96,7 @@ public class AccountController : Controller
             try
             {
                 // Check if user already exists
-                var existingUser = await _mongoDbService.GetUserByEmailAsync(model.Email);
+                var existingUser = await _userService.GetUserByEmailAsync(model.Email);
                 if (existingUser != null)
                 {
                     return Json(ApiResponse<AuthDataResponse>.ErrorResponse("This email is already registered", 409));
@@ -113,13 +113,13 @@ public class AccountController : Controller
                     IsActive = true
                 };
 
-                // Save user to MongoDB
-                bool created = await _mongoDbService.CreateUserAsync(user);
+                // Save user to MongoDB via Service
+                bool created = await _userService.RegisterUserAsync(user);
 
                 if (created)
                 {
                     // Get the created user
-                    var newUser = await _mongoDbService.GetUserByEmailAsync(model.Email);
+                    var newUser = await _userService.GetUserByEmailAsync(model.Email);
                     if (newUser != null)
                     {
                         // Generate JWT token
