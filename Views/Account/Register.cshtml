@@ -1,0 +1,160 @@
+@model RegisterViewModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-user-plus"></i> Create Your Account
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <div id="alertContainer"></div>
+                    
+                    <form id="registerForm">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="FullName" class="form-label">
+                                <i class="fas fa-user"></i> Full Name
+                            </label>
+                            <input id="FullName" name="FullName" type="text" class="form-control" placeholder="Enter your full name" required>
+                            <span id="FullName-error" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email Address
+                            </label>
+                            <input id="Email" name="Email" type="email" class="form-control" placeholder="Enter your email" required>
+                            <span id="Email-error" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Password" class="form-label">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <input id="Password" name="Password" type="password" class="form-control" placeholder="Enter password (min 6 characters)" required>
+                            <span id="Password-error" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="ConfirmPassword" class="form-label">
+                                <i class="fas fa-lock"></i> Confirm Password
+                            </label>
+                            <input id="ConfirmPassword" name="ConfirmPassword" type="password" class="form-control" placeholder="Confirm your password" required>
+                            <span id="ConfirmPassword-error" class="text-danger small"></span>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 mb-3" id="submitBtn">
+                            <i class="fas fa-user-check"></i> Create Account
+                        </button>
+
+                        <hr>
+
+                        <p class="text-center mb-0">
+                            Already have an account? 
+                            <a asp-action="Login" class="text-success fw-bold">Login here</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/auth.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('FullName').value;
+            const email = document.getElementById('Email').value;
+            const password = document.getElementById('Password').value;
+            const confirmPassword = document.getElementById('ConfirmPassword').value;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                showAlert('Passwords do not match', 'danger');
+                return;
+            }
+            
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating account...';
+            
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                
+                const response = await fetch('@Url.Action("Register", "Account")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: `FullName=${encodeURIComponent(fullName)}&Email=${encodeURIComponent(email)}&Password=${encodeURIComponent(password)}&ConfirmPassword=${encodeURIComponent(confirmPassword)}`
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    const errorText = await response.text();
+                    showAlert('Invalid server response: ' + (errorText || jsonError.message), 'danger');
+                    return;
+                }
+                
+                if (data && data.success) {
+                    console.log('Registration response:', data);
+                    
+                    // Extract token and user from nested data structure
+                    const token = data.data?.token || data.token;
+                    const user = data.data?.user || data.user;
+                    
+                    console.log('Registration successful! Token received:', token ? 'Token exists (length: ' + token.length + ')' : 'No token');
+                    console.log('User data:', user);
+                    console.log('Token structure:', token ? 'Parts: ' + token.split('.').length : 'N/A');
+                    
+                    // Store JWT token in localStorage
+                    const tokenStored = AuthService.setToken(token);
+                    const userStored = AuthService.setUser(user);
+                    
+                    console.log('Token stored:', tokenStored);
+                    console.log('User stored:', userStored);
+                    console.log('Token in localStorage:', AuthService.getToken() ? 'YES' : 'NO');
+                    console.log('User in localStorage:', AuthService.getUser());
+                    
+                    // Show success message
+                    showAlert('Account created successfully! Redirecting...', 'success');
+                    
+                    // Redirect after 1 second
+                    setTimeout(() => {
+                        window.location.href = '@Url.Action("Index", "Home")';
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Registration failed', 'danger');
+                }
+            } catch (error) {
+                showAlert('An error occurred: ' + error.message, 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-user-check"></i> Create Account';
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+        }
+    </script>
+}
+

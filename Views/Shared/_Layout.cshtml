@@ -1,0 +1,92 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - FirstMvcApp</title>
+    <script type="importmap"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/FirstMvcApp.styles.css" asp-append-version="true" />
+    <script src="~/js/auth.js"></script>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-lg navbar-dark custom-navbar sticky-top">
+            <div class="container-fluid px-4">
+                <a class="navbar-brand fw-bold fs-5 d-flex align-items-center" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="fas fa-rocket navbar-logo me-2"></i>
+                    <span class="brand-text">FirstMvcApp</span>
+                </a>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                        aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="navbar-collapse collapse">
+                    <ul class="navbar-nav ms-auto gap-3">
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom" asp-area="" asp-controller="Home" asp-action="Index">
+                                <i class="fas fa-home"></i> <span class="nav-text">Home</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom" asp-area="" asp-controller="About" asp-action="Index">
+                                <i class="fas fa-circle-info"></i> <span class="nav-text">About</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-custom" asp-area="" asp-controller="Home" asp-action="Privacy">
+                                <i class="fas fa-shield"></i> <span class="nav-text">Privacy</span>
+                            </a>
+                        </li>
+
+                        @if (Context.Session.GetString("IsAuthenticated") == "true" || !string.IsNullOrEmpty(Context.Session.GetString("JwtToken")))
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link nav-link-custom dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle"></i> <span class="nav-text" id="userName">@Context.Session.GetString("UserName")</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile"><i class="fas fa-cog"></i> Profile</a></li>
+                                    <li><a class="dropdown-item" href="#"><i class="fas fa-sliders-h"></i> Settings</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom btn-login" asp-controller="Account" asp-action="Login">
+                                    <i class="fas fa-sign-in-alt"></i> <span class="nav-text">Login</span>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link nav-link-custom btn-signup" asp-controller="Account" asp-action="Register">
+                                    <i class="fas fa-user-plus"></i> <span class="nav-text">Sign Up</span>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2026 - FirstMvcApp - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

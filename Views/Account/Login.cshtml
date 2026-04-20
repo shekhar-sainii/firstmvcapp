@@ -1,0 +1,144 @@
+@model LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">
+                        <i class="fas fa-sign-in-alt"></i> Login to Your Account
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <div id="alertContainer"></div>
+                    
+                    <form id="loginForm">
+                        @Html.AntiForgeryToken()
+                        <div class="mb-3">
+                            <label for="Email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email Address
+                            </label>
+                            <input id="Email" name="Email" type="email" class="form-control" placeholder="Enter your email" required>
+                            <span id="Email-error" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Password" class="form-label">
+                                <i class="fas fa-lock"></i> Password
+                            </label>
+                            <input id="Password" name="Password" type="password" class="form-control" placeholder="Enter your password" required>
+                            <span id="Password-error" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3 form-check">
+                            <input id="RememberMe" name="RememberMe" type="checkbox" class="form-check-input">
+                            <label for="RememberMe" class="form-check-label">
+                                <i class="fas fa-check"></i> Remember me
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 mb-3" id="submitBtn">
+                            <i class="fas fa-login"></i> Login
+                        </button>
+
+                        <hr>
+
+                        <p class="text-center mb-0">
+                            Don't have an account? 
+                            <a asp-action="Register" class="text-primary fw-bold">Create one now</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/auth.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('Email').value;
+            const password = document.getElementById('Password').value;
+            const rememberMe = document.getElementById('RememberMe').checked;
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                
+                const response = await fetch('@Url.Action("Login", "Account")', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Accept': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: `Email=${encodeURIComponent(email)}&Password=${encodeURIComponent(password)}&RememberMe=${rememberMe}`
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    const errorText = await response.text();
+                    showAlert('Invalid server response: ' + (errorText || jsonError.message), 'danger');
+                    return;
+                }
+                
+                if (data && data.success) {
+                    console.log('Login response:', data);
+                    
+                    // Extract token and user from nested data structure
+                    const token = data.data?.token || data.token;
+                    const user = data.data?.user || data.user;
+                    
+                    console.log('Login successful! Token received:', token ? 'Token exists (length: ' + token.length + ')' : 'No token');
+                    console.log('User data:', user);
+                    console.log('Token structure:', token ? 'Parts: ' + token.split('.').length : 'N/A');
+                    
+                    // Store JWT token in localStorage
+                    const tokenStored = AuthService.setToken(token);
+                    const userStored = AuthService.setUser(user);
+                    
+                    console.log('Token stored:', tokenStored);
+                    console.log('User stored:', userStored);
+                    console.log('Token in localStorage:', AuthService.getToken() ? 'YES' : 'NO');
+                    console.log('User in localStorage:', AuthService.getUser());
+                    
+                    // Show success message
+                    showAlert('Login successful! Redirecting...', 'success');
+                    
+                    // Redirect after 1 second
+                    setTimeout(() => {
+                        window.location.href = '@Url.Action("Index", "Home")';
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Login failed', 'danger');
+                }
+            } catch (error) {
+                showAlert('An error occurred: ' + error.message, 'danger');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-login"></i> Login';
+            }
+        });
+        
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+        }
+    </script>
+}
+

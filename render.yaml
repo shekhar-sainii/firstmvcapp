@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: first-mvc-app
+    runtime: docker
+    plan: free
+    region: ohio
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ConnectionStrings__MongoDb
+        sync: false
+        placeholder: "mongodb+srv://<user>:<password>@cluster.mongodb.net/dbname"
+      - key: Jwt__Secret
+        sync: false
+        placeholder: "your-super-secret-key-at-least-32-chars"
+      - key: Email__SenderPassword
+        sync: false
+        placeholder: "your-email-app-password"
+      - key: Jwt__Issuer
+        value: FirstMvcApp
+      - key: Jwt__Audience
+        value: FirstMvcAppUsers

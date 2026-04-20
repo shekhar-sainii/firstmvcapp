@@ -1,0 +1,176 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
+  color: var(--bs-secondary-color);
+  text-align: end;
+}
+
+.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
+  text-align: start;
+}
+
+/* === CUSTOM NAVBAR STYLING === */
+.custom-navbar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  padding: 1rem 0;
+}
+
+.custom-navbar .navbar-brand {
+  color: white !important;
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.custom-navbar .navbar-brand:hover {
+  transform: translateY(-2px);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.brand-text {
+  display: inline-block;
+  color: #fff;
+  font-weight: 600;
+}
+
+.navbar-logo {
+  font-size: 1.5rem;
+  animation: bounce 2s infinite;
+  color: #fff;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.nav-link-custom {
+  color: rgba(255, 255, 255, 0.9) !important;
+  font-weight: 500;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+}
+
+.nav-link-custom i {
+  margin-right: 0.5rem;
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+}
+
+.nav-text {
+  display: inline-block;
+  color: #fff;
+}
+
+.nav-link-custom:hover {
+  color: white !important;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.nav-link-custom::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 3px;
+  background: white;
+  border-radius: 2px;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.nav-link-custom:hover::after {
+  width: 80%;
+}
+
+.navbar-toggler {
+  border: 2px solid rgba(255, 255, 255, 0.5) !important;
+  padding: 0.25rem 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.navbar-toggler:focus {
+  box-shadow: 0 0 0 0.25rem rgba(255, 255, 255, 0.3) !important;
+}
+
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+/* Auth Button Styling */
+.btn-login {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: white !important;
+}
+
+.btn-login:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: white;
+}
+
+.btn-signup {
+  background: rgba(255, 255, 255, 0.25);
+  border: 2px solid white;
+  color: white !important;
+  font-weight: 600;
+}
+
+.btn-signup:hover {
+  background: white;
+  color: #667eea !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dropdown-menu {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.dropdown-menu .dropdown-item {
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s ease;
+}
+
+.dropdown-menu .dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.dropdown-divider {
+  border-color: rgba(255, 255, 255, 0.2);
+}

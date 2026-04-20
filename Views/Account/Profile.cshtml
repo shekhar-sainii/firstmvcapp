@@ -1,0 +1,244 @@
+@model FirstMvcApp.Models.ProfileViewModel
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Alert Messages -->
+            <div id="alertContainer"></div>
+
+            <!-- Profile Card -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h2 class="mb-0"><i class="fas fa-user-circle"></i> Your Profile</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">Welcome back, <strong id="displayName">@Model.FullName</strong>.</p>
+
+                    <!-- View Mode -->
+                    <div id="viewMode">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h5>Full Name</h5>
+                                <p id="displayFullName">@Model.FullName</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Email</h5>
+                                <p id="displayEmail">@Model.Email</p>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h5>Account Created</h5>
+                            <p id="displayCreatedDate" class="small text-muted">-</p>
+                        </div>
+
+                        <div class="card border-secondary mb-4">
+                            <div class="card-body">
+                                <h5 class="card-title">JWT Token</h5>
+                                <p class="card-text text-break small">@(!string.IsNullOrEmpty(Model.Token) ? Model.Token : "No token available.")</p>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary" id="editBtn" onclick="toggleEditMode()">
+                                <i class="fas fa-edit"></i> Edit Profile
+                            </button>
+                            <a class="btn btn-danger" asp-controller="Account" asp-action="Logout">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Edit Mode -->
+                    <div id="editMode" style="display: none;">
+                        <form id="profileForm" onsubmit="updateProfile(event)">
+                            <div class="mb-3">
+                                <label for="editFullName" class="form-label">
+                                    <i class="fas fa-user"></i> Full Name
+                                </label>
+                                <input type="text" class="form-control" id="editFullName" name="FullName" required>
+                                <small class="text-danger" id="editFullName-error"></small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="editEmail" class="form-label">
+                                    <i class="fas fa-envelope"></i> Email
+                                </label>
+                                <input type="email" class="form-control" id="editEmail" name="Email" readonly>
+                                <small class="text-muted">Email cannot be changed</small>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success" id="saveBtn">
+                                    <i class="fas fa-save"></i> Save Changes
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="toggleEditMode()">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/auth.js"></script>
+    <script>
+        let currentUserEmail = '';
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Get user data from localStorage
+            const user = AuthService.getUser();
+            const token = AuthService.getToken();
+
+            if (!user || !user.email) {
+                showAlert('User information not available. Please login again.', 'danger');
+                setTimeout(() => window.location.href = '/Account/Login', 2000);
+                return;
+            }
+
+            currentUserEmail = user.email;
+            console.log('Loading profile for email:', currentUserEmail);
+            loadProfileData();
+        });
+
+        function loadProfileData() {
+            const email = currentUserEmail;
+            const token = AuthService.getToken();
+
+            if (!email || !token) {
+                showAlert('User information not available. Please login again.', 'danger');
+                return;
+            }
+
+            console.log('Fetching profile from API for:', email);
+            fetch(`/api/account/profile/${encodeURIComponent(email)}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+                .then(response => {
+                    console.log('Profile API response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Profile API response:', data);
+                    if (data.success && data.data) {
+                        const user = data.data;
+                        displayProfileData(user);
+                        populateEditForm(user);
+                    } else {
+                        showAlert(data.message || 'Failed to load profile data', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading profile:', error);
+                    showAlert('An error occurred while loading profile data', 'danger');
+                });
+        }
+
+        function displayProfileData(user) {
+            document.getElementById('displayName').textContent = user.fullName || user.FullName;
+            document.getElementById('displayFullName').textContent = user.fullName || user.FullName;
+            document.getElementById('displayEmail').textContent = user.email || user.Email;
+        }
+
+        function populateEditForm(user) {
+            document.getElementById('editFullName').value = user.fullName || user.FullName || '';
+            document.getElementById('editEmail').value = user.email || user.Email || '';
+        }
+
+        function toggleEditMode() {
+            const viewMode = document.getElementById('viewMode');
+            const editMode = document.getElementById('editMode');
+            const editBtn = document.getElementById('editBtn');
+
+            if (editMode.style.display === 'none') {
+                viewMode.style.display = 'none';
+                editMode.style.display = 'block';
+                editBtn.style.display = 'none';
+            } else {
+                viewMode.style.display = 'block';
+                editMode.style.display = 'none';
+                editBtn.style.display = 'block';
+                loadProfileData(); // Reload data to discard changes
+            }
+        }
+
+        function updateProfile(event) {
+            event.preventDefault();
+
+            const fullName = document.getElementById('editFullName').value;
+            const email = document.getElementById('editEmail').value;
+            const token = AuthService.getToken();
+            const saveBtn = document.getElementById('saveBtn');
+
+            if (!fullName || !email) {
+                showAlert('All fields are required', 'danger');
+                return;
+            }
+
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            const request = {
+                email: email,
+                fullName: fullName
+            };
+
+            console.log('Updating profile with:', request);
+
+            fetch('/api/account/profile/update', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(request)
+            })
+                .then(response => {
+                    console.log('Update profile response status:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Update profile response:', data);
+                    if (data.success) {
+                        showAlert(data.message || 'Profile updated successfully!', 'success');
+                        if (data.data) {
+                            displayProfileData(data.data);
+                        }
+                        toggleEditMode();
+                        setTimeout(() => location.reload(), 1500);
+                    } else {
+                        showAlert(data.message || 'Failed to update profile', 'danger');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error updating profile:', error);
+                    showAlert('An error occurred while updating profile', 'danger');
+                })
+                .finally(() => {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+                });
+        }
+
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            alertContainer.innerHTML = `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+            window.scrollTo(0, 0);
+        }
+    </script>
+}
